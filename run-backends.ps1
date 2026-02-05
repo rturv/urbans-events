@@ -19,7 +19,7 @@ if (-not (Test-Path $logDir)) {
 $backends = @(
     @{ name = "registro-incidencias"; port = 8081 },
     @{ name = "priorizacion-incidencias"; port = 8082 },
-    @{ name = "notificaciones"; port = 8083 },
+    @{ name = "notificaciones-quarkus"; port = 8083 },
     @{ name = "metricas"; port = 8084 }
 )
 
@@ -57,9 +57,11 @@ function Start-Backends {
         
         Write-Host "[+] Iniciando $name (puerto $port)..." -ForegroundColor Cyan
         
+        $command = if ($name -eq "notificaciones-quarkus") { "quarkus:dev" } else { "spring-boot:run" }
+        
         $scriptBlock = @"
 cd /d "$modulePath"
-"$mvnCmd" spring-boot:run
+"$mvnCmd" $command
 "@
         
         $tempBatch = Join-Path $logDir "start-$name.bat"
