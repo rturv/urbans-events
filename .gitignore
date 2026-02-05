@@ -70,3 +70,4 @@ debug/kafka-data/
 *.tmp
 *.swp
 *.swo
+.backends-pids.json
