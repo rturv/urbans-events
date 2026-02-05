@@ -3,6 +3,8 @@ package com.urbanevents.priorizacion.domain;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 
 import java.time.Instant;
 
@@ -11,14 +13,15 @@ import java.time.Instant;
 public class PrioridadIncidencia {
     @Id
     private Long incidenciaId;
-    private String prioridad;
+    @Enumerated(EnumType.STRING)
+    private Prioridad prioridad;
     private String motivo;
     private Instant actualizadaEn;
 
     public PrioridadIncidencia() {
     }
 
-    public PrioridadIncidencia(Long incidenciaId, String prioridad, String motivo, Instant actualizadaEn) {
+    public PrioridadIncidencia(Long incidenciaId, Prioridad prioridad, String motivo, Instant actualizadaEn) {
         this.incidenciaId = incidenciaId;
         this.prioridad = prioridad;
         this.motivo = motivo;
@@ -29,7 +32,7 @@ public class PrioridadIncidencia {
         return incidenciaId;
     }
 
-    public String getPrioridad() {
+    public Prioridad getPrioridad() {
         return prioridad;
     }
 
