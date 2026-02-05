@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Marcellus&family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
+
+:root {
+  color-scheme: light;
+  --brand-900: #0a3f24;
+  --brand-700: #0e6f3b;
+  --brand-500: #2b9155;
+  --accent-400: #f0b429;
+  --danger-500: #d6453d;
+  --ink-900: #0d1f14;
+  --ink-700: #1f3b2d;
+  --ink-500: #3e5a4d;
+  --surface-0: #f7f5ef;
+  --surface-1: #ffffff;
+  --surface-2: #eef1ea;
+  --border-1: #d6dccd;
+  --shadow-1: 0 22px 60px rgba(10, 63, 36, 0.15);
+  --shadow-2: 0 12px 30px rgba(14, 111, 59, 0.18);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Source Sans 3', system-ui, -apple-system, sans-serif;
+  background: radial-gradient(circle at top left, rgba(43, 145, 85, 0.12), transparent 55%),
+    linear-gradient(180deg, #f5f2e8 0%, #f9f9f6 65%, #f3f6f0 100%);
+  color: var(--ink-900);
+}
+
+button {
+  font-family: inherit;
+}

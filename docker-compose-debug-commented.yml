@@ -1,0 +1,41 @@
+version: '3.9'
+services:
+  kafka:
+    image: apache/kafka:4.1.1
+    container_name: kraft-kafka-debug-commented
+    # Red por defecto (bridge). Para modo host usar network_mode: host
+    network_mode: host
+    restart: unless-stopped    
+    environment:
+      # --- Raft/KRaft config para broker + controller single-node ---
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@localhost:9093"
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+
+      # --- Ejemplo: política de creación de topics ---
+      # Desactiva autocreación de topics (así el alumno puede aprender a crearlos a mano)
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+      # --- Seguridad para single-broker (los logs internos necesitan replicación mínima de 1, no 3) ---
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"                    # Offsets internos del consumer group
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"            # Log de transacciones
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"                      # Replicas disponibles mínimas (1 en single node)
+
+      # --- Performance/dev: menos delay al rebalancear grupos de consumo ---
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+
+      # (Opcional) Retención corta para dev: logs viejos se borran antes y ocupa menos disco
+      KAFKA_LOG_RETENTION_HOURS: "24"
+
+# Innecesario en host mode
+#    ports:
+#      - "9092:9092"
+#      - "9093:9093"
+    volumes:
+      - ./debug/kafka-data:/var/lib/kafka/data
+volumes:
+  kafka-debug-commented-data:

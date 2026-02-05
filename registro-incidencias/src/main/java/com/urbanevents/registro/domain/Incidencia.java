@@ -1,0 +1,74 @@
+package com.urbanevents.registro.domain;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+
+import java.time.Instant;
+
+@Entity
+@Table(name = "incidencias")
+public class Incidencia {
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "incidencias_seq")
+    @SequenceGenerator(name = "incidencias_seq", sequenceName = "registro_incidencias.incidencias_seq", allocationSize = 1)
+    private Long id;
+    private String tipo;
+    private String descripcion;
+    private String origen;
+    private String ubicacion;
+    private String estado;
+    private Instant creadaEn;
+
+    public Incidencia() {
+    }
+
+    public Incidencia(Long id, String tipo, String descripcion, String origen, String ubicacion, String estado, Instant creadaEn) {
+        this.id = id;
+        this.tipo = tipo;
+        this.descripcion = descripcion;
+        this.origen = origen;
+        this.ubicacion = ubicacion;
+        this.estado = estado;
+        this.creadaEn = creadaEn;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getTipo() {
+        return tipo;
+    }
+
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public String getOrigen() {
+        return origen;
+    }
+
+    public String getUbicacion() {
+        return ubicacion;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public Instant getCreadaEn() {
+        return creadaEn;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+}

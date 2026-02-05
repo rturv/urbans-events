@@ -1,0 +1,57 @@
+<main class="page">
+  <header class="hero">
+    <div class="hero__text">
+      <p class="hero__eyebrow">Junta de Andalucia · Urban Events</p>
+      <h1>Panel de incidencias urbanas</h1>
+      <p class="hero__lead">
+        Visualizacion agregada de incidencias, prioridad y notificaciones a partir de eventos Kafka.
+      </p>
+      <div class="hero__actions">
+        <button class="button" type="button" (click)="cargarMetricas()">Actualizar metricas</button>
+        <span class="hero__meta">Ultima actualizacion: {{ lastUpdated || 'pendiente' }}</span>
+      </div>
+    </div>
+    <div class="hero__card">
+      <div class="hero__badge">Eventos</div>
+      <p class="hero__value">{{ notificacionesTotales }}</p>
+      <p class="hero__label">Notificaciones enviadas</p>
+      <div class="hero__status" [class.is-error]="status === 'error'">
+        @if (status === 'loading') { Cargando datos... }
+        @if (status === 'ready') { Datos sincronizados. }
+        @if (status === 'error') { Error al conectar con metricas. }
+      </div>
+    </div>
+  </header>
+
+  <section class="cards">
+    <article class="card">
+      <div class="card__header">
+        <h2>Incidencias por tipo</h2>
+        <span class="card__hint">Conteo agregado</span>
+      </div>
+      <div class="card__chart">
+        <canvas baseChart [type]="'bar'" [data]="tipoChartData" [options]="barOptions"></canvas>
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="card__header">
+        <h2>Distribucion por prioridad</h2>
+        <span class="card__hint">Alta, media y baja</span>
+      </div>
+      <div class="card__chart">
+        <canvas baseChart [type]="'doughnut'" [data]="prioridadChartData" [options]="doughnutOptions"></canvas>
+      </div>
+    </article>
+
+    <article class="card card--wide">
+      <div class="card__header">
+        <h2>Evolucion temporal</h2>
+        <span class="card__hint">Ultimos 7 dias</span>
+      </div>
+      <div class="card__chart">
+        <canvas baseChart [type]="'line'" [data]="evolucionChartData" [options]="lineOptions"></canvas>
+      </div>
+    </article>
+  </section>
+</main>
