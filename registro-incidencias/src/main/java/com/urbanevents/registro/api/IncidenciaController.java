@@ -2,11 +2,10 @@ package com.urbanevents.registro.api;
 
 import com.urbanevents.events.EventMetadata;
 import com.urbanevents.events.IncidenciaCreadaEvent;
-import com.urbanevents.events.Topics;
 import com.urbanevents.registro.domain.Incidencia;
 import com.urbanevents.registro.domain.IncidenciaRepository;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.http.HttpStatus;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,12 +19,12 @@ import java.util.UUID;
 @RequestMapping("/incidencias")
 public class IncidenciaController {
     private final IncidenciaRepository repository;
-    private final KafkaTemplate<String, IncidenciaCreadaEvent> kafkaTemplate;
+    private final StreamBridge streamBridge;
 
     public IncidenciaController(IncidenciaRepository repository,
-                                KafkaTemplate<String, IncidenciaCreadaEvent> kafkaTemplate) {
+                                StreamBridge streamBridge) {
         this.repository = repository;
-        this.kafkaTemplate = kafkaTemplate;
+        this.streamBridge = streamBridge;
     }
 
     @PostMapping
@@ -43,9 +42,9 @@ public class IncidenciaController {
         IncidenciaCreadaEvent event = new IncidenciaCreadaEvent(metadata, generatedId, request.tipo(),
                 request.descripcion(), request.origen(), request.ubicacion(), now);
 
-        // Espera a que el mensaje se envíe correctamente
+        // Enviar evento a Kafka usando StreamBridge
         try {
-            kafkaTemplate.send(Topics.INCIDENCIAS_CREADAS, String.valueOf(generatedId), event).get();
+            streamBridge.send("incidenciasCreadas-out-0", event);
         } catch (Exception e) {
             System.err.println("Error enviando mensaje a Kafka: " + e.getMessage());
             e.printStackTrace();

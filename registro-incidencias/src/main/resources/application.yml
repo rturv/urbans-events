@@ -13,22 +13,55 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-  kafka:
-    bootstrap-servers: localhost:9092
-    producer:
-      acks: all
-      retries: 3
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      properties:
-        linger.ms: 10
-        batch.size: 16384
-        enable.idempotence: true
-    properties:
-      request.timeout.ms: 30000
-      session.timeout.ms: 10000
+  
+  # Configuración de Spring Cloud Stream
+  cloud:
+    stream:
+      # Definición del binding funcional
+      function:
+        definition: consumirIncidenciaPriorizada
+      
+      # Configuración de los bindings
+      bindings:
+        # Input binding: consume de incidencias.priorizadas
+        consumirIncidenciaPriorizada-in-0:
+          destination: incidencias.priorizadas
+          group: registro-service
+          consumer:
+            max-attempts: 3
+            back-off-initial-interval: 1000
+        
+        # Output binding: produce a incidencias.creadas (para el controlador)
+        incidenciasCreadas-out-0:
+          destination: incidencias.creadas
+          producer:
+            partition-count: 3
+      
+      # Configuración específica de Kafka
+      kafka:
+        binder:
+          brokers: localhost:9092
+          auto-create-topics: true
+          configuration:
+            session.timeout.ms: 10000
+            request.timeout.ms: 30000
+        
+        bindings:
+          consumirIncidenciaPriorizada-in-0:
+            consumer:
+              enable-dlq: false
+              auto-commit-interval: 100
+              start-offset: latest
+          
+          incidenciasCreadas-out-0:
+            producer:
+              configuration:
+                acks: all
+                retries: 3
+                linger.ms: 10
+                batch.size: 16384
+                enable.idempotence: true
 
+# Variable de compatibilidad para la configuración anterior
 kafka:
-  # mantiene compatibilidad con la variable usada en docker-compose
   bootstrap-servers: localhost:9092
-

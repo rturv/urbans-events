@@ -1,7 +1,6 @@
 package com.urbanevents.registro.api;
 
 import com.urbanevents.events.IncidenciaCreadaEvent;
-import com.urbanevents.events.Topics;
 import com.urbanevents.registro.domain.Incidencia;
 import com.urbanevents.registro.domain.IncidenciaRepository;
 import org.junit.jupiter.api.Test;
@@ -10,14 +9,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.SendResult;
+import org.springframework.cloud.stream.function.StreamBridge;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.eq;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.same;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,7 +23,7 @@ class IncidenciaControllerTest {
     private IncidenciaRepository repository;
 
     @Mock
-    private KafkaTemplate<String, IncidenciaCreadaEvent> kafkaTemplate;
+    private StreamBridge streamBridge;
 
     @InjectMocks
     private IncidenciaController controller;
@@ -41,10 +38,8 @@ class IncidenciaControllerTest {
             return i;
         });
 
-        // Mock del futuro para que send() funcione correctamente
-        java.util.concurrent.CompletableFuture<SendResult<String, IncidenciaCreadaEvent>> future = new java.util.concurrent.CompletableFuture<>();
-        future.complete(null);
-        when(kafkaTemplate.send(any(), any(), any())).thenReturn(future);
+        // Mock de StreamBridge para que el send funcione correctamente
+        when(streamBridge.send(any(), any())).thenReturn(true);
 
         IncidenciaCreadaEvent event = controller.crear(request);
 
@@ -60,6 +55,6 @@ class IncidenciaControllerTest {
         assertThat(captor.getValue().getTipo()).isEqualTo("fuego");
         assertThat(captor.getValue().getEstado()).isEqualTo("registrada");
 
-        verify(kafkaTemplate).send(eq(Topics.INCIDENCIAS_CREADAS), eq(String.valueOf(event.incidenciaId())), same(event));
+        verify(streamBridge).send(eq("incidenciasCreadas-out-0"), any(IncidenciaCreadaEvent.class));
     }
 }
