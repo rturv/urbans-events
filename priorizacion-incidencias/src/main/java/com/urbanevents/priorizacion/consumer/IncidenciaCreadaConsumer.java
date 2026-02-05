@@ -31,7 +31,7 @@ public class IncidenciaCreadaConsumer {
     @KafkaListener(topics = Topics.INCIDENCIAS_CREADAS, groupId = "priorizacion-service")
     public void onMessage(IncidenciaCreadaEvent event) throws Exception {
         String prioridad = priorizacionService.calcularPrioridad(event.descripcion());
-        String motivo = "reglas-palabras";
+        String motivo = priorizacionService.calcularMotivo(event.descripcion());
         Instant now = Instant.now();
 
         repository.save(new PrioridadIncidencia(event.incidenciaId(), prioridad, motivo, now));
