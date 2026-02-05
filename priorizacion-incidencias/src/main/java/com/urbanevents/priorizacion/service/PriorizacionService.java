@@ -9,12 +9,20 @@ import java.util.List;
  *  */
 public class PriorizacionService {
     private final List<String> palabrasCriticas;
+    private final int delaySegundos;
 
     public PriorizacionService(List<String> palabrasCriticas) {
         this.palabrasCriticas = palabrasCriticas;
+        this.delaySegundos = 0;
+    }
+
+    public PriorizacionService(List<String> palabrasCriticas, int delaySegundos) {
+        this.palabrasCriticas = palabrasCriticas;
+        this.delaySegundos = delaySegundos;
     }
 
     public String calcularPrioridad(String descripcion) {
+        aplicarDelay();
         if (descripcion == null) {
             return "media";
         }
@@ -25,6 +33,17 @@ public class PriorizacionService {
             }
         }
         return "media";
+    }
+
+    private void aplicarDelay() {
+        if (delaySegundos > 0) {
+            try {
+                Thread.sleep(delaySegundos * 1000L);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Interrupt durante el procesamiento de priorización", e);
+            }
+        }
     }
 
     public String calcularMotivo(String descripcion) {
@@ -38,5 +57,9 @@ public class PriorizacionService {
             }
         }
         return "prioridad por defecto";
+    }
+
+    public int getDelaySegundos() {
+        return delaySegundos;
     }
 }

@@ -21,6 +21,7 @@ public class Incidencia {
     private String origen;
     private String ubicacion;
     private String estado;
+    private String prioridad;
     private Instant creadaEn;
 
     public Incidencia() {
@@ -33,6 +34,7 @@ public class Incidencia {
         this.origen = origen;
         this.ubicacion = ubicacion;
         this.estado = estado;
+        this.prioridad = null;
         this.creadaEn = creadaEn;
     }
 
@@ -62,6 +64,14 @@ public class Incidencia {
 
     public Instant getCreadaEn() {
         return creadaEn;
+    }
+
+    public String getPrioridad() {
+        return prioridad;
+    }
+
+    public void setPrioridad(String prioridad) {
+        this.prioridad = prioridad;
     }
 
     public void setEstado(String estado) {

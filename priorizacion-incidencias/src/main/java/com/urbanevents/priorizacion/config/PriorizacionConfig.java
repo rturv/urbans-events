@@ -11,11 +11,12 @@ import java.util.List;
 @Configuration
 public class PriorizacionConfig {
     @Bean
-    public PriorizacionService priorizacionService(@Value("${priorizacion.palabras-criticas}") String palabras) {
+    public PriorizacionService priorizacionService(@Value("${priorizacion.palabras-criticas}") String palabras,
+                                                   @Value("${priorizacion.delay-segundos:0}") int delaySegundos) {
         List<String> lista = Arrays.stream(palabras.split(","))
                 .map(String::trim)
                 .filter(value -> !value.isBlank())
                 .toList();
-        return new PriorizacionService(lista);
+        return new PriorizacionService(lista, delaySegundos);
     }
 }

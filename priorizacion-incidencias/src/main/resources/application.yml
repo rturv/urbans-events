@@ -32,3 +32,4 @@ kafka:
 
 priorizacion:
   palabras-criticas: incendio, explosion, explosivo, heridos, urgente
+  delay-segundos: 4
