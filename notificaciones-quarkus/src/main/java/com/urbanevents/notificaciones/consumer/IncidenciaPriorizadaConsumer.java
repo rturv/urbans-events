@@ -5,10 +5,12 @@ import com.urbanevents.events.EventMetadata;
 import com.urbanevents.events.IncidenciaNotificadaEvent;
 import com.urbanevents.events.IncidenciaPriorizadaEvent;
 import com.urbanevents.notificaciones.domain.Notificacion;
+import com.urbanevents.notificaciones.domain.NotificacionCreadaEvent;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.reactive.messaging.kafka.Record;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -25,6 +27,9 @@ public class IncidenciaPriorizadaConsumer {
 
     @Inject
     ObjectMapper objectMapper;
+
+    @Inject
+    Event<NotificacionCreadaEvent> notificacionEvent;
 
     @ConfigProperty(name = "notificaciones.destinatarios")
     String destinatarios;
@@ -58,7 +63,13 @@ public class IncidenciaPriorizadaConsumer {
                 
                 return Panache.withTransaction(() -> notificacion.persist())
                     .onItem().transform(persisted -> {
+                        // Castear el resultado de persist a Notificacion
+                        Notificacion notif = (Notificacion) persisted;
                         LOG.infof("Notificación guardada para incidencia %s", event.incidenciaId());
+                        
+                        // Disparar evento de dominio para que el observer envíe el email
+                        notificacionEvent.fire(new NotificacionCreadaEvent(notif));
+                        LOG.infof("Evento de notificación disparado para incidencia %s", event.incidenciaId());
                         
                         // Crear metadata del evento
                         EventMetadata metadata = new EventMetadata(

@@ -5,6 +5,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.time.Instant;
 
@@ -12,9 +15,12 @@ import java.time.Instant;
 @Table(name = "prioridad_incidencia")
 public class PrioridadIncidencia {
     @Id
+    @NotNull
     private Long incidenciaId;
     @Enumerated(EnumType.STRING)
+    @NotNull
     private Prioridad prioridad;
+    @Size(max = 255)
     private String motivo;
     private Instant actualizadaEn;
 

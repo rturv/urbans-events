@@ -12,7 +12,7 @@
         <module>shared-events</module>
         <module>registro-incidencias</module>
         <module>priorizacion-incidencias</module>
-        <module>notificaciones</module>
+        
         <module>notificaciones-quarkus</module>
         <module>metricas</module>
     </modules>

@@ -24,5 +24,13 @@ services:
     command: -url=jdbc:postgresql://postgres:5432/urban-events -user=pguser -password=localpass -locations=filesystem:/migrations migrate
     restart: "no"
 
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025" # puerto SMTP
+      - "8025:8025" # puerto UI Web
+    restart: unless-stopped
+
 volumes:
   pgdata: {}

@@ -6,6 +6,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import java.time.Instant;
 
@@ -16,11 +18,26 @@ public class Incidencia {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "incidencias_seq")
     @SequenceGenerator(name = "incidencias_seq", sequenceName = "registro_incidencias.incidencias_seq", allocationSize = 1)
     private Long id;
+    
+    @NotBlank
+    @Size(max = 100)
     private String tipo;
+    
+    @Size(max = 2000)
     private String descripcion;
+    
+    @NotBlank
+    @Size(max = 255)
     private String origen;
+    
+    @NotBlank
+    @Size(max = 255)
     private String ubicacion;
+    
+    @Size(max = 50)
     private String estado;
+    
+    @Size(max = 50)
     private String prioridad;
     private Instant creadaEn;
 

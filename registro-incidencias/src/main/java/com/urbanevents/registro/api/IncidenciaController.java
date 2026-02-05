@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -29,7 +30,7 @@ public class IncidenciaController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public IncidenciaCreadaEvent crear(@RequestBody NuevaIncidenciaRequest request) throws Exception {
+    public IncidenciaCreadaEvent crear(@Valid @RequestBody NuevaIncidenciaRequest request) throws Exception {
         Instant now = Instant.now();
         Incidencia incidencia = new Incidencia(null, request.tipo(), request.descripcion(), request.origen(),
                 request.ubicacion(), "registrada", now);

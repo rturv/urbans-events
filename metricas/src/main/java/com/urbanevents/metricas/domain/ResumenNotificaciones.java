@@ -8,11 +8,11 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "resumen_notificaciones")
+@Table(name = "resumen_notificaciones", schema = "metricas")
 public class ResumenNotificaciones {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "resumen_notificaciones_seq")
-    @SequenceGenerator(name = "resumen_notificaciones_seq", sequenceName = "resumen_notificaciones_seq", allocationSize = 1)
+    @SequenceGenerator(name = "resumen_notificaciones_seq", sequenceName = "metricas.resumen_notificaciones_seq", allocationSize = 1)
     private Long id;
     private long total;
 

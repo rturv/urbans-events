@@ -6,14 +6,17 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
 
 @Entity
-@Table(name = "indicadores")
+@Table(name = "indicadores", schema = "metricas")
 public class Indicador {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "indicadores_seq")
-    @SequenceGenerator(name = "indicadores_seq", sequenceName = "indicadores_seq", allocationSize = 1)
+    @SequenceGenerator(name = "indicadores_seq", sequenceName = "metricas.indicadores_seq", allocationSize = 1)
     private Long id;
+    
+    @Size(max = 255)
     private String tipo;
     private long total;
     private long prioridadAlta;
