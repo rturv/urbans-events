@@ -3,9 +3,12 @@ services:
   kafka:
     image: apache/kafka:4.1.1
     container_name: kraft-kafka-debug-commented
-    # Red por defecto (bridge). Para modo host usar network_mode: host
-    network_mode: host
-    restart: unless-stopped    
+    # Red por defecto (bridge). Para WSL2 NO usar network_mode: host
+    # network_mode: host
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+      - "9093:9093"
     environment:
       # --- Raft/KRaft config para broker + controller single-node ---
       KAFKA_NODE_ID: 1
@@ -31,10 +34,6 @@ services:
       # (Opcional) Retención corta para dev: logs viejos se borran antes y ocupa menos disco
       KAFKA_LOG_RETENTION_HOURS: "24"
 
-# Innecesario en host mode
-#    ports:
-#      - "9092:9092"
-#      - "9093:9093"
     volumes:
       - ./debug/kafka-data:/var/lib/kafka/data
 volumes:

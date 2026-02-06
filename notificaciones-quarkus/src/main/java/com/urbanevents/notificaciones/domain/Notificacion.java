@@ -3,12 +3,14 @@ package com.urbanevents.notificaciones.domain;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.time.Instant;
@@ -28,33 +30,30 @@ public class Notificacion extends PanacheEntityBase {
     @Size(max = 50)
     public String canal;
     
-    @NotBlank
     @Size(max = 255)
     @Column(name = "destino")
     public String destinatario;
     
-    @Size(max = 50)
-    public String estado;
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado", length = 50)
+    public EstadoNotificacion estado;
     
     @Column(name = "creado")
     public Instant enviadaEn;
     
     @Size(max = 4000)
     public String contenido;
-    
-    @Column(name = "enviado")
-    public Boolean enviado;
 
     public Notificacion() {
     }
 
-    public Notificacion(Long incidenciaId, String canal, String destinatario, String estado, Instant enviadaEn) {
+    public Notificacion(Long incidenciaId, String canal, String destinatario, EstadoNotificacion estado, Instant enviadaEn) {
         this.incidenciaId = incidenciaId;
         this.canal = canal;
         this.destinatario = destinatario;
         this.estado = estado;
         this.enviadaEn = enviadaEn;
         this.contenido = "";
-        this.enviado = false;
     }
 }
