@@ -39,7 +39,7 @@ spring:
         
         # Output binding: produce a incidencias.changes (para cambios de incidencias)
         incidenciasChanges-out-0:
-          destination: incidencias.changes
+          destination: incidencias.modificadas
           producer:
             partition-count: 1
       

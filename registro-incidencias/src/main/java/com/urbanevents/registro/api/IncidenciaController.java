@@ -41,13 +41,13 @@ public class IncidenciaController {
     public IncidenciaCreadaEvent crear(@Valid @RequestBody NuevaIncidenciaRequest request) throws Exception {
         Instant now = Instant.now();
         Incidencia incidencia = new Incidencia(null, request.tipo(), request.descripcion(), request.origen(),
-                request.ubicacion(), "registrada", now);
+                request.ubicacion(), "REGISTRADA", now);
         repository.save(incidencia);
 
         Long generatedId = incidencia.getId();
 
         EventMetadata metadata = new EventMetadata(UUID.randomUUID().toString(), "IncidenciaCreada",
-                now, "registro-incidencias", "v1");
+                now, "registro-incidencias", "v1",incidencia.getEstado());
         IncidenciaCreadaEvent event = new IncidenciaCreadaEvent(metadata, generatedId, request.tipo(),
                 request.descripcion(), request.origen(), request.ubicacion(), now);
 
@@ -95,7 +95,7 @@ public class IncidenciaController {
                 "IncidenciaChanged",
                 now,
                 "registro-incidencias",
-                "v1"
+                "v1",incidencia.getEstado()
         );
 
         IncidenciaChangedEvent event = new IncidenciaChangedEvent(
