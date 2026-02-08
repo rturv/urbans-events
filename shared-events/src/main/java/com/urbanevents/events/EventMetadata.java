@@ -23,6 +23,11 @@ public record EventMetadata(
 
         @NotBlank
         @Size(max = 50)
-        String schemaVersion
+        String schemaVersion,
+
+        @Size(max = 50) //estado de la incidencia, opcional para algunos eventos
+        String estado
+        
+
 ) {
 }
