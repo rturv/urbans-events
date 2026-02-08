@@ -36,6 +36,12 @@ spring:
           destination: incidencias.creadas
           producer:
             partition-count: 3
+        
+        # Output binding: produce a incidencias.changes (para cambios de incidencias)
+        incidenciasChanges-out-0:
+          destination: incidencias.changes
+          producer:
+            partition-count: 1
       
       # Configuración específica de Kafka
       kafka:
@@ -54,6 +60,15 @@ spring:
               start-offset: latest
           
           incidenciasCreadas-out-0:
+            producer:
+              configuration:
+                acks: all
+                retries: 3
+                linger.ms: 10
+                batch.size: 16384
+                enable.idempotence: true
+          
+          incidenciasChanges-out-0:
             producer:
               configuration:
                 acks: all

@@ -2,19 +2,27 @@ package com.urbanevents.registro.api;
 
 import com.urbanevents.events.EventMetadata;
 import com.urbanevents.events.IncidenciaCreadaEvent;
+import com.urbanevents.events.IncidenciaChangedEvent;
 import com.urbanevents.registro.domain.Incidencia;
 import com.urbanevents.registro.domain.IncidenciaRepository;
+
+import io.swagger.v3.oas.annotations.Parameter;
+
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 import jakarta.validation.Valid;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/incidencias")
@@ -51,6 +59,62 @@ public class IncidenciaController {
             e.printStackTrace();
             throw new RuntimeException("Error enviando evento a Kafka", e);
         }
+        return event;
+    }
+
+    @PostMapping("/{id}/cambios")
+    @ResponseStatus(HttpStatus.OK)
+    public IncidenciaChangedEvent cambiarIncidencia(
+            @Parameter(description = "ID de la incidencia", required = true)            
+            @PathVariable(name = "id") Long id,
+            @Valid @RequestBody CambiarIncidenciaRequest request) throws Exception {
+        
+        // 1. Validar que la incidencia existe
+        Optional<Incidencia> incidenciaOpt = repository.findById(id);
+        if (incidenciaOpt.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Incidencia no encontrada");
+        }
+
+        Incidencia incidencia = incidenciaOpt.get();
+        Instant now = Instant.now();
+
+        // 2. Actualizar estado
+        incidencia.setEstado(request.nuevoEstado());
+
+        // 3. Agregar comentario si está presente
+        if (request.comentario() != null && !request.comentario().trim().isEmpty()) {
+            incidencia.agregarComentario(request.comentario());
+        }
+
+        // 4. Guardar en BD
+        repository.save(incidencia);
+
+        // 5. Crear evento
+        EventMetadata metadata = new EventMetadata(
+                UUID.randomUUID().toString(),
+                "IncidenciaChanged",
+                now,
+                "registro-incidencias",
+                "v1"
+        );
+
+        IncidenciaChangedEvent event = new IncidenciaChangedEvent(
+                metadata,
+                id,
+                request.nuevoEstado(),
+                request.comentario(),
+                now
+        );
+
+        // 6. Publicar evento a Kafka
+        try {
+            streamBridge.send("incidenciasChanges-out-0", event);
+        } catch (Exception e) {
+            System.err.println("Error enviando evento a Kafka: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Error enviando evento a Kafka", e);
+        }
+
         return event;
     }
 }

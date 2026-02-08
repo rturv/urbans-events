@@ -6,10 +6,15 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "incidencias")
@@ -40,6 +45,11 @@ public class Incidencia {
     @Size(max = 50)
     private String prioridad;
     private Instant creadaEn;
+    
+    @ElementCollection
+    @CollectionTable(name = "incidencia_comentarios", joinColumns = @jakarta.persistence.JoinColumn(name = "incidencia_id"))
+    @Column(name = "comentario")
+    private List<String> comentarios = new ArrayList<>();
 
     public Incidencia() {
     }
@@ -97,5 +107,20 @@ public class Incidencia {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public List<String> getComentarios() {
+        return comentarios;
+    }
+
+    public void setComentarios(List<String> comentarios) {
+        this.comentarios = comentarios;
+    }
+
+    public void agregarComentario(String comentario) {
+        if (this.comentarios == null) {
+            this.comentarios = new ArrayList<>();
+        }
+        this.comentarios.add(comentario);
     }
 }
