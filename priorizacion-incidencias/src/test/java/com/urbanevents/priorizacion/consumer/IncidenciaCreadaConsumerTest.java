@@ -94,7 +94,7 @@ class IncidenciaCreadaConsumerTest {
                 "accidente grave en la plaza",
                 "sensor",
                 "plaza central",
-                Instant.now()
+                Instant.now(),""
         );
 
         // Act
@@ -129,7 +129,7 @@ class IncidenciaCreadaConsumerTest {
                 "farola apagada",
                 "ciudadano",
                 "calle mayor",
-                Instant.now()
+                Instant.now(),""
         );
 
         // Act

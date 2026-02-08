@@ -14,7 +14,7 @@
         <module>priorizacion-incidencias</module>
         
         <module>notificaciones-quarkus</module>
-        <module>metricas</module>
+        <module>metricas-quarkus</module>
     </modules>
 
     <properties>

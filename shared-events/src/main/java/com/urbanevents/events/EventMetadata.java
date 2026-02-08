@@ -30,4 +30,11 @@ public record EventMetadata(
         
 
 ) {
+        public EventMetadata(String eventId,
+                                                 String eventType,
+                                                 Instant timestamp,
+                                                 String sourceService,
+                                                 String schemaVersion) {
+                this(eventId, eventType, timestamp, sourceService, schemaVersion, null);
+        }
 }

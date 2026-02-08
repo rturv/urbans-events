@@ -59,7 +59,7 @@ class IncidenciaControllerTest {
         ArgumentCaptor<Incidencia> captor = ArgumentCaptor.forClass(Incidencia.class);
         verify(repository).save(captor.capture());
         assertThat(captor.getValue().getTipo()).isEqualTo("fuego");
-        assertThat(captor.getValue().getEstado()).isEqualTo("registrada");
+        assertThat(captor.getValue().getEstado()).isEqualTo("REGISTRADA");
 
         verify(streamBridge).send(eq("incidenciasCreadas-out-0"), any(IncidenciaCreadaEvent.class));
     }

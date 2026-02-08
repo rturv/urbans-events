@@ -58,7 +58,7 @@ public class IncidenciaCreadaConsumer {
                 "IncidenciaPriorizada",
                 now, 
                 "priorizacion-incidencias", 
-                "v1"
+                "v1",null
             );
             
             IncidenciaPriorizadaEvent priorizadaEvent = new IncidenciaPriorizadaEvent(

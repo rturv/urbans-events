@@ -20,7 +20,7 @@ $backends = @(
     @{ name = "registro-incidencias"; port = 8081 },
     @{ name = "priorizacion-incidencias"; port = 8082 },
     @{ name = "notificaciones-quarkus"; port = 8083 },
-    @{ name = "metricas"; port = 8084 }
+    @{ name = "metricas-quarkus"; port = 8084 }
 )
 
 function Get-ProcessByPort {
@@ -57,7 +57,7 @@ function Start-Backends {
         
         Write-Host "[+] Iniciando $name (puerto $port)..." -ForegroundColor Cyan
         
-        $command = if ($name -eq "notificaciones-quarkus") { "quarkus:dev" } else { "spring-boot:run" }
+        $command = if ($name -like "*quarkus") { "quarkus:dev" } else { "spring-boot:run" }
         
         $scriptBlock = @"
 cd /d "$modulePath"
