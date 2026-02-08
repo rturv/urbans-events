@@ -31,5 +31,17 @@ public record IncidenciaCreadaEvent(
 
         @NotNull
         Instant creadaEn
+                ,
+                @Size(max = 50)
+                String estado
 ) {
+        public IncidenciaCreadaEvent(EventMetadata metadata,
+                                                                  Long incidenciaId,
+                                                                  String tipo,
+                                                                  String descripcion,
+                                                                  String origen,
+                                                                  String ubicacion,
+                                                                  Instant creadaEn) {
+                this(metadata, incidenciaId, tipo, descripcion, origen, ubicacion, creadaEn, null);
+        }
 }
