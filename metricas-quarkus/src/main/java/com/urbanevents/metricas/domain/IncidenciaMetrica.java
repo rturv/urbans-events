@@ -14,31 +14,46 @@ import java.time.Instant;
  */
 @Entity
 @Table(name = "incidencias_metricas", schema = "metricas")
-public class IncidenciaMetrica extends PanacheEntity {
+public class IncidenciaMetrica {
+
+    @Id
+    @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "incidencias_metricas_seq")
+    @SequenceGenerator(name = "incidencias_metricas_seq", sequenceName = "metricas.incidencias_metricas_seq", allocationSize = 1)
+    public Long id;
 
     @NotNull
-    @Column(unique = true)
+    @Column(name = "incidencia_id", unique = true, nullable = false)
     public Long incidenciaId;
 
     @NotBlank
+    @Column(name = "tipo_incidencia")
     public String tipoIncidencia;
 
     public String prioridad; // nullable hasta que llega IncidenciaPriorizadaEvent
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "estado_actual")
     public EstadoIncidencia estadoActual = EstadoIncidencia.PENDIENTE;
 
     // Timestamps de eventos
     @NotNull
+    @Column(name = "tiempo_creacion")
     public Instant tiempoCreacion;
 
+    @Column(name = "tiempo_priorizacion")
     public Instant tiempoPriorizacion;
+    @Column(name = "tiempo_notificacion")
     public Instant tiempoNotificacion;
+    @Column(name = "tiempo_resolucion")
     public Instant tiempoResolucion;
 
     // Tiempos calculados en milisegundos
+    @Column(name = "ms_priorizacion")
     public Long msPriorizacion;      // Desde creación hasta priorización
+    @Column(name = "ms_notificacion")
     public Long msNotificacion;      // Desde priorización hasta notificación
+    @Column(name = "ms_resolucion")
     public Long msResolucion;        // Desde creación hasta resolución
 
     // Banderas de estado
@@ -46,6 +61,7 @@ public class IncidenciaMetrica extends PanacheEntity {
 
     // Control
     @NotNull
+    @Column(name = "ultima_actualizacion")
     public Instant ultimaActualizacion;
 
     // Constructores

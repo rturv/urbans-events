@@ -2,7 +2,11 @@ package com.urbanevents.metricas.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.urbanevents.events.IncidenciaPriorizadaEvent;
-import com.urbanevents.metricas.service.MetricasService;
+import com.urbanevents.metricas.domain.IncidenciaMetrica;
+import com.urbanevents.metricas.service.AgregacionMetricasService;
+import com.urbanevents.metricas.service.CalculoMetricasService;
+import io.quarkus.hibernate.reactive.panache.Panache;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -18,7 +22,13 @@ public class IncidenciaPriorizadaConsumer {
     private static final Logger LOG = Logger.getLogger(IncidenciaPriorizadaConsumer.class);
 
     @Inject
-    MetricasService metricasService;
+    AgregacionMetricasService agregacionMetricasService;
+
+    @Inject
+    CalculoMetricasService calculoMetricasService;
+
+    @Inject
+    com.urbanevents.metricas.domain.IncidenciaMetricaRepository incidenciaMetricaRepository;
 
     @Inject
     ObjectMapper objectMapper;
@@ -28,20 +38,57 @@ public class IncidenciaPriorizadaConsumer {
      * y los procesa deserializando a IncidenciaPriorizadaEvent.
      */
     @Incoming("incidencias-priorizadas-metricas")
-    public void consume(String mensaje) {
-        try {
-            LOG.debugf("Recibido mensaje en incidencias-priorizadas-metricas: %s", mensaje);
+    public Uni<Void> consume(String mensaje) {
+        return Uni.createFrom().item(mensaje)
+            .onItem().transform(json -> {
+                try {
+                    LOG.debugf("Recibido mensaje en incidencias-priorizadas-metricas: %s", json);
+                    return objectMapper.readValue(json, IncidenciaPriorizadaEvent.class);
+                } catch (Exception e) {
+                    throw new RuntimeException("Error deserializando evento", e);
+                }
+            })
+            .onItem().transformToUni(evento ->
+                Panache.withTransaction(() ->
+                    incidenciaMetricaRepository.find("incidenciaId", evento.incidenciaId())
+                        .firstResult()
+                        .onItem().transformToUni(metrica -> {
+                                if (metrica == null) {
+                                IncidenciaMetrica nueva = new IncidenciaMetrica(
+                                        evento.incidenciaId(),
+                                        "DESCONOCIDO",
+                                        evento.priorizadaEn()
+                                );
+                                nueva.prioridad = evento.prioridad();
+                                nueva.tiempoPriorizacion = evento.priorizadaEn();
+                                nueva.ultimaActualizacion = java.time.Instant.now();
+                                return incidenciaMetricaRepository.persist(nueva);
+                            } else {
+                                metrica.prioridad = evento.prioridad();
+                                metrica.tiempoPriorizacion = evento.priorizadaEn();
 
-            // Deserializar el mensaje JSON al evento
-            IncidenciaPriorizadaEvent evento = objectMapper.readValue(mensaje, IncidenciaPriorizadaEvent.class);
+                                if (metrica.tiempoCreacion != null) {
+                                    long msPriorizacion = calculoMetricasService.calcularTiempoEnMs(
+                                            metrica.tiempoCreacion,
+                                            evento.priorizadaEn()
+                                    );
+                                    metrica.msPriorizacion = msPriorizacion;
+                                }
 
-            // Procesar
-            metricasService.procesarPriorizacion(evento);
-
-        } catch (Exception e) {
-            LOG.errorf("Error procesando mensaje IncidenciaPriorizadaEvent: %s. Mensaje: %s", 
-                    e.getMessage(), mensaje);
-            // Nota: El reintento se maneja vía configuración de Kafka en application.properties
-        }
+                                metrica.ultimaActualizacion = java.time.Instant.now();
+                                return incidenciaMetricaRepository.persist(metrica);
+                            }
+                        })
+                )
+                .onItem().transformToUni(v ->
+                    Uni.createFrom().voidItem()
+                        .runSubscriptionOn(io.smallrye.mutiny.infrastructure.Infrastructure.getDefaultExecutor())
+                        .onItem().invoke(() -> agregacionMetricasService.recalcularPorTipoYPrioridad(
+                                "DESCONOCIDO", evento.prioridad()
+                        ))
+                )
+            )
+            .onFailure().invoke(e -> LOG.errorf(e, "Error procesando mensaje IncidenciaPriorizadaEvent: %s. Mensaje: %s", e.getMessage(), mensaje))
+            .onFailure().recoverWithNull();
     }
 }

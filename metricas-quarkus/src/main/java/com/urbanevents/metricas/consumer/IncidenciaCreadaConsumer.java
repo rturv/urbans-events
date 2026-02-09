@@ -2,7 +2,9 @@ package com.urbanevents.metricas.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.urbanevents.events.IncidenciaCreadaEvent;
-import com.urbanevents.metricas.service.MetricasService;
+import com.urbanevents.metricas.domain.IncidenciaMetrica;
+import io.quarkus.hibernate.reactive.panache.Panache;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -18,30 +20,44 @@ public class IncidenciaCreadaConsumer {
     private static final Logger LOG = Logger.getLogger(IncidenciaCreadaConsumer.class);
 
     @Inject
-    MetricasService metricasService;
+    ObjectMapper objectMapper;
 
     @Inject
-    ObjectMapper objectMapper;
+    com.urbanevents.metricas.domain.IncidenciaMetricaRepository incidenciaMetricaRepository;
 
     /**
      * Recibe mensajes del topic "incidencias-creadas-metricas"
      * y los procesa deserializando a IncidenciaCreadaEvent.
      */
     @Incoming("incidencias-creadas-metricas")
-    public void consume(String mensaje) {
-        try {
-            LOG.debugf("Recibido mensaje en incidencias-creadas-metricas: %s", mensaje);
+    public Uni<Void> consume(String mensaje) {
+        return Uni.createFrom().item(mensaje)
+            .onItem().transform(json -> {
+                try {
+                    LOG.debugf("Recibido mensaje en incidencias-creadas-metricas: %s", json);
+                    return objectMapper.readValue(json, IncidenciaCreadaEvent.class);
+                } catch (Exception e) {
+                    throw new RuntimeException("Error deserializando evento", e);
+                }
+            })
+            .onItem().transformToUni(evento -> {
+                LOG.infof("Procesando IncidenciaCreadaEvent para incidencia %d, tipo: %s",
+                        evento.incidenciaId(), evento.tipo());
 
-            // Deserializar el mensaje JSON al evento
-            IncidenciaCreadaEvent evento = objectMapper.readValue(mensaje, IncidenciaCreadaEvent.class);
+                IncidenciaMetrica metrica = new IncidenciaMetrica(
+                        evento.incidenciaId(),
+                        evento.tipo(),
+                        evento.creadaEn()
+                );
 
-            // Procesar
-            metricasService.procesarCreacion(evento);
+                metrica.estadoActual = com.urbanevents.metricas.domain.EstadoIncidencia.PENDIENTE;
+                metrica.ultimaActualizacion = java.time.Instant.now();
 
-        } catch (Exception e) {
-            LOG.errorf("Error procesando mensaje IncidenciaCreadaEvent: %s. Mensaje: %s", 
-                    e.getMessage(), mensaje);
-            // Nota: El reintento se maneja vía configuración de Kafka en application.properties
-        }
+                return Panache.withTransaction(() -> incidenciaMetricaRepository.persist(metrica))
+                        .onItem().invoke(v -> LOG.infof("Incidencia %d creada (reactivo)", evento.incidenciaId()))
+                        .replaceWithVoid();
+            })
+            .onFailure().invoke(e -> LOG.errorf(e, "Error procesando mensaje IncidenciaCreadaEvent: %s. Mensaje: %s", e.getMessage(), mensaje))
+            .onFailure().recoverWithNull();
     }
 }

@@ -51,3 +51,7 @@ CREATE INDEX IF NOT EXISTS idx_metricas_agregadas_prioridad ON metricas.metricas
 CREATE INDEX IF NOT EXISTS idx_incidencias_metricas_incidencia_id ON metricas.incidencias_metricas(incidencia_id);
 CREATE INDEX IF NOT EXISTS idx_incidencias_metricas_tipo ON metricas.incidencias_metricas(tipo_incidencia);
 CREATE INDEX IF NOT EXISTS idx_incidencias_metricas_estado ON metricas.incidencias_metricas(estado_actual);
+
+CREATE SEQUENCE IF NOT EXISTS metricas.incidencias_metricas_seq START 1;
+
+CREATE SEQUENCE IF NOT EXISTS metricas.metricas_agregadas_seq START 1;

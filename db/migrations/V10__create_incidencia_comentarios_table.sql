@@ -9,3 +9,5 @@ CREATE TABLE IF NOT EXISTS registro_incidencias.incidencia_comentarios (
 
 -- Índice para búsqueda rápida por incidencia
 CREATE INDEX IF NOT EXISTS idx_incidencia_comentarios_incidencia_id ON registro_incidencias.incidencia_comentarios(incidencia_id);
+
+

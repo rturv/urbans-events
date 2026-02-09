@@ -3,9 +3,12 @@ package com.urbanevents.metricas.service;
 import com.urbanevents.metricas.domain.*;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
+import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 
 /**
  * Servicio que recalcula las métricas agregadas.
@@ -28,90 +31,92 @@ public class AgregacionMetricasService {
      * Recalcula las métricas agregadas para un tipo e incidencia específicos.
      * Se llama después de procesar cada evento de cambio.
      */
-    public void recalcularPorTipoYPrioridad(String tipo, String prioridad) {
-        // Obtener o crear la métrica agregada
-        MetricaAgregada agregada = metricaAgregadaRepository.findByTipoAndPrioridad(tipo, prioridad);
-        if (agregada == null) {
+        @WithTransaction
+        public Uni<Void> recalcularPorTipoYPrioridad(String tipo, String prioridad) {
+        return Uni.createFrom().item(() -> {
+            // Obtener o crear la métrica agregada
+            MetricaAgregada agregada = metricaAgregadaRepository.findByTipoAndPrioridad(tipo, prioridad);
+            if (agregada == null) {
             agregada = new MetricaAgregada(tipo, prioridad);
-        }
+            }
 
-        // Obtener todas las incidencias de este tipo y prioridad
-        List<IncidenciaMetrica> incidencias = incidenciaMetricaRepository.findByTipoAndPrioridad(tipo, prioridad);
+            // Obtener todas las incidencias de este tipo y prioridad
+            List<IncidenciaMetrica> incidencias = incidenciaMetricaRepository.findByTipoAndPrioridad(tipo, prioridad);
 
-        // Calcular conteos
-        long total = incidencias.size();
-        long resuelta = incidencias.stream()
+            // Calcular conteos
+            long total = incidencias.size();
+            long resuelta = incidencias.stream()
                 .filter(i -> i.estadoActual == EstadoIncidencia.RESUELTO ||
-                             i.estadoActual == EstadoIncidencia.CERRADO)
+                    i.estadoActual == EstadoIncidencia.CERRADO)
                 .count();
-        long rechazada = incidencias.stream()
+            long rechazada = incidencias.stream()
                 .filter(i -> i.estadoActual == EstadoIncidencia.RECHAZADO)
                 .count();
-        long pendiente = incidencias.stream()
+            long pendiente = incidencias.stream()
                 .filter(i -> i.estadoActual == EstadoIncidencia.PENDIENTE)
                 .count();
 
-        agregada.cantidadTotal = total;
-        agregada.cantidadResuelta = resuelta;
-        agregada.cantidadRechazada = rechazada;
-        agregada.cantidadPendiente = pendiente;
+            agregada.cantidadTotal = total;
+            agregada.cantidadResuelta = resuelta;
+            agregada.cantidadRechazada = rechazada;
+            agregada.cantidadPendiente = pendiente;
 
-        // Calcular tiempos para incidencias resueltas
-        List<IncidenciaMetrica> resueltas = incidencias.stream()
+            // Calcular tiempos para incidencias resueltas
+            List<IncidenciaMetrica> resueltas = incidencias.stream()
                 .filter(i -> i.msResolucion != null && i.msResolucion > 0)
                 .collect(Collectors.toList());
 
-        if (!resueltas.isEmpty()) {
-            // Tiempo promedio en segundos
+            if (!resueltas.isEmpty()) {
             long sumaMs = resueltas.stream().mapToLong(i -> i.msResolucion).sum();
             double promedioSeg = calculoMetricasService.msASegundosDouble(sumaMs / resueltas.size());
             agregada.tiempoPromedioResolucionSeg = promedioSeg;
 
-            // Min y max
             long minMs = resueltas.stream().mapToLong(i -> i.msResolucion).min().orElse(0);
             long maxMs = resueltas.stream().mapToLong(i -> i.msResolucion).max().orElse(0);
             agregada.tiempoMinResolucionSeg = calculoMetricasService.msASegundos(minMs);
             agregada.tiempoMaxResolucionSeg = calculoMetricasService.msASegundos(maxMs);
 
-            // Percentiles (p50, p95, p99)
             List<Long> tiemposOrdenados = resueltas.stream()
-                    .map(i -> i.msResolucion)
-                    .sorted()
-                    .collect(Collectors.toList());
+                .map(i -> i.msResolucion)
+                .sorted()
+                .collect(Collectors.toList());
 
             agregada.percentil50Seg = calculoMetricasService.msASegundosDouble(
-                    percentil(tiemposOrdenados, 50)
+                percentil(tiemposOrdenados, 50)
             );
             agregada.percentil95Seg = calculoMetricasService.msASegundosDouble(
-                    percentil(tiemposOrdenados, 95)
+                percentil(tiemposOrdenados, 95)
             );
             agregada.percentil99Seg = calculoMetricasService.msASegundosDouble(
-                    percentil(tiemposOrdenados, 99)
+                percentil(tiemposOrdenados, 99)
             );
-        }
+            }
 
-        // Calcular tiempo promedio de priorización
-        List<IncidenciaMetrica> priorizadas = incidencias.stream()
+            // Calcular tiempo promedio de priorización
+            List<IncidenciaMetrica> priorizadas = incidencias.stream()
                 .filter(i -> i.msPriorizacion != null && i.msPriorizacion > 0)
                 .collect(Collectors.toList());
 
-        if (!priorizadas.isEmpty()) {
+            if (!priorizadas.isEmpty()) {
             long sumaMs = priorizadas.stream().mapToLong(i -> i.msPriorizacion).sum();
             double promedioSeg = calculoMetricasService.msASegundosDouble(sumaMs / priorizadas.size());
             agregada.tiempoPromedioProblemaizacionSeg = promedioSeg;
+            }
+
+            // Calcular tasas de éxito/fracaso/pendiente
+            agregada.tasaExitoPct = calculoMetricasService.calcularTasaExito(resuelta, total);
+            agregada.tasaFracasoPct = calculoMetricasService.calcularTasaFracaso(rechazada, total);
+            agregada.tasaPendientePct = calculoMetricasService.calcularTasaPendiente(pendiente, total);
+
+            // Actualizar fecha
+            agregada.fechaActualizacion = Instant.now();
+
+            // Guardar (Panache maneja automáticamente persist vs update)
+            metricaAgregadaRepository.persist(agregada).await().indefinitely();
+
+            return null;
+        }).runSubscriptionOn(Infrastructure.getDefaultExecutor()).replaceWithVoid();
         }
-
-        // Calcular tasas de éxito/fracaso/pendiente
-        agregada.tasaExitoPct = calculoMetricasService.calcularTasaExito(resuelta, total);
-        agregada.tasaFracasoPct = calculoMetricasService.calcularTasaFracaso(rechazada, total);
-        agregada.tasaPendientePct = calculoMetricasService.calcularTasaPendiente(pendiente, total);
-
-        // Actualizar fecha
-        agregada.fechaActualizacion = Instant.now();
-
-        // Guardar (Panache maneja automáticamente persist vs update)
-        metricaAgregadaRepository.persist(agregada).await().indefinitely();
-    }
 
     /**
      * Calcula un percentil de una lista de números.
