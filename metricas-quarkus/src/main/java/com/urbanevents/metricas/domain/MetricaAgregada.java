@@ -1,6 +1,5 @@
 package com.urbanevents.metricas.domain;
 
-import io.quarkus.hibernate.reactive.panache.PanacheEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

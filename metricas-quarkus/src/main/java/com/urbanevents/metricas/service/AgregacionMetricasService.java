@@ -3,12 +3,10 @@ package com.urbanevents.metricas.service;
 import com.urbanevents.metricas.domain.*;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
+import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
-import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
 
 /**
  * Servicio que recalcula las métricas agregadas.
@@ -31,14 +29,13 @@ public class AgregacionMetricasService {
      * Recalcula las métricas agregadas para un tipo e incidencia específicos.
      * Se llama después de procesar cada evento de cambio.
      */
-        @WithTransaction
-        public Uni<Void> recalcularPorTipoYPrioridad(String tipo, String prioridad) {
-        return Uni.createFrom().item(() -> {
-            // Obtener o crear la métrica agregada
-            MetricaAgregada agregada = metricaAgregadaRepository.findByTipoAndPrioridad(tipo, prioridad);
-            if (agregada == null) {
+    @Transactional
+    public void recalcularPorTipoYPrioridad(String tipo, String prioridad) {
+        // Obtener o crear la métrica agregada
+        MetricaAgregada agregada = metricaAgregadaRepository.findByTipoAndPrioridad(tipo, prioridad);
+        if (agregada == null) {
             agregada = new MetricaAgregada(tipo, prioridad);
-            }
+        }
 
             // Obtener todas las incidencias de este tipo y prioridad
             List<IncidenciaMetrica> incidencias = incidenciaMetricaRepository.findByTipoAndPrioridad(tipo, prioridad);
@@ -112,11 +109,8 @@ public class AgregacionMetricasService {
             agregada.fechaActualizacion = Instant.now();
 
             // Guardar (Panache maneja automáticamente persist vs update)
-            metricaAgregadaRepository.persist(agregada).await().indefinitely();
-
-            return null;
-        }).runSubscriptionOn(Infrastructure.getDefaultExecutor()).replaceWithVoid();
-        }
+            metricaAgregadaRepository.persist(agregada);
+    }
 
     /**
      * Calcula un percentil de una lista de números.

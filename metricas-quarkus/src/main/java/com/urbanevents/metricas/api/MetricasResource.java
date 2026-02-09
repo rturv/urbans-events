@@ -4,6 +4,7 @@ import com.urbanevents.metricas.api.dto.*;
 import com.urbanevents.metricas.domain.*;
 import com.urbanevents.metricas.service.CalculoMetricasService;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.jboss.logging.Logger;
@@ -37,6 +38,7 @@ public class MetricasResource {
      */
     @GET
     @Path("/resumen")
+    @Transactional
     public ResumenMetricasDTO obtenerResumen() {
         LOG.info("Obteniendo resumen general de métricas");
 
@@ -82,6 +84,7 @@ public class MetricasResource {
      */
     @GET
     @Path("/agregadas")
+    @Transactional
     public List<MetricaAgregadaDTO> obtenerAgregadas(
             @QueryParam("tipo") String tipo,
             @QueryParam("prioridad") String prioridad) {
@@ -123,6 +126,7 @@ public class MetricasResource {
      */
     @GET
     @Path("/tipo/{tipo}")
+    @Transactional
     public List<MetricaAgregadaDTO> obtenerPorTipo(@PathParam("tipo") String tipo) {
         LOG.infof("Obteniendo métricas por tipo: %s", tipo);
 
@@ -142,6 +146,7 @@ public class MetricasResource {
      */
     @GET
     @Path("/incidencia/{incidenciaId}")
+    @Transactional
     public MetricaIncidenciaDTO obtenerPorIncidencia(@PathParam("incidenciaId") Long incidenciaId) {
         LOG.infof("Obteniendo métricas de incidencia: %d", incidenciaId);
 
@@ -168,6 +173,7 @@ public class MetricasResource {
      */
     @GET
     @Path("/estadisticas-por-tipo")
+    @Transactional
     public List<EstadisticasTipoDTO> obtenerEstadisticasPorTipo() {
         LOG.info("Obteniendo estadísticas por tipo");
 
@@ -231,6 +237,7 @@ public class MetricasResource {
      */
     @GET
     @Path("/pendientes")
+    @Transactional
     public List<IncidenciaPendienteDTO> obtenerPendientes() {
         LOG.info("Obteniendo incidencias pendientes");
 

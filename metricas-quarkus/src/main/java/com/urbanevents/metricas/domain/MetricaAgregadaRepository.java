@@ -1,6 +1,6 @@
 package com.urbanevents.metricas.domain;
 
-import io.quarkus.hibernate.reactive.panache.PanacheRepository;
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.List;
 
@@ -16,8 +16,7 @@ public class MetricaAgregadaRepository implements PanacheRepository<MetricaAgreg
      */
     public MetricaAgregada findByTipoAndPrioridad(String tipo, String prioridad) {
         return find("tipoIncidencia = ?1 AND prioridad = ?2", tipo, prioridad)
-                .firstResult()
-                .await().indefinitely();
+                .firstResult();
     }
 
     /**
@@ -25,8 +24,7 @@ public class MetricaAgregadaRepository implements PanacheRepository<MetricaAgreg
      */
     public List<MetricaAgregada> findByTipo(String tipo) {
         return find("tipoIncidencia", tipo)
-                .list()
-                .await().indefinitely();
+                .list();
     }
 
     /**
@@ -34,8 +32,7 @@ public class MetricaAgregadaRepository implements PanacheRepository<MetricaAgreg
      */
     public List<MetricaAgregada> findAllOrdenadas() {
         return find("ORDER BY tipoIncidencia, prioridad")
-                .list()
-                .await().indefinitely();
+                .list();
     }
 
     /**

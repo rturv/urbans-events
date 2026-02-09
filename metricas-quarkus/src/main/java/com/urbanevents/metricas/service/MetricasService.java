@@ -55,7 +55,7 @@ public class MetricasService {
             metrica.ultimaActualizacion = Instant.now();
 
             // Guardar
-            incidenciaMetricaRepository.persist(metrica).await().indefinitely();
+            incidenciaMetricaRepository.persist(metrica);
             LOG.infof("Incidencia %d creada exitosamente", evento.incidenciaId());
 
         } catch (Exception e) {
@@ -101,13 +101,7 @@ public class MetricasService {
             metrica.ultimaActualizacion = Instant.now();
 
             // Guardar
-            incidenciaMetricaRepository.persist(metrica).await().indefinitely();
-
-            // Recalcular agregadas
-            agregacionMetricasService.recalcularPorTipoYPrioridad(
-                    metrica.tipoIncidencia,
-                    evento.prioridad()
-            );
+            incidenciaMetricaRepository.persist(metrica);
 
             LOG.infof("Incidencia %d priorizada exitosamente", evento.incidenciaId());
 
@@ -149,15 +143,7 @@ public class MetricasService {
             metrica.ultimaActualizacion = Instant.now();
 
             // Guardar
-            incidenciaMetricaRepository.persist(metrica).await().indefinitely();
-
-            // Recalcular agregadas
-            if (metrica.prioridad != null) {
-                agregacionMetricasService.recalcularPorTipoYPrioridad(
-                        metrica.tipoIncidencia,
-                        metrica.prioridad
-                );
-            }
+            incidenciaMetricaRepository.persist(metrica);
 
             LOG.infof("Incidencia %d notificada exitosamente", evento.incidenciaId());
 
@@ -206,15 +192,7 @@ public class MetricasService {
             metrica.ultimaActualizacion = Instant.now();
 
             // Guardar
-            incidenciaMetricaRepository.persist(metrica).await().indefinitely();
-
-            // Recalcular agregadas
-            if (metrica.prioridad != null) {
-                agregacionMetricasService.recalcularPorTipoYPrioridad(
-                        metrica.tipoIncidencia,
-                        metrica.prioridad
-                );
-            }
+            incidenciaMetricaRepository.persist(metrica);
 
             LOG.infof("Incidencia %d cambiada a estado %s exitosamente", 
                     evento.incidenciaId(), nuevoEstado);
