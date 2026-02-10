@@ -1,5 +1,5 @@
--- Migración V3: crear tabla `prioridad` en el esquema `priorizacion_incidencias`
--- Crear secuencia por tabla (si no existe) y tabla `prioridades`
+CREATE SCHEMA IF NOT EXISTS priorizacion_incidencias;
+
 CREATE TABLE IF NOT EXISTS priorizacion_incidencias.prioridad_incidencia (
 	incidencia_id int8 NOT NULL,
 	actualizada_en timestamptz(6) NULL,

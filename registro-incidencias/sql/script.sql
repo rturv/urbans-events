@@ -1,5 +1,4 @@
--- Migración V2: crear tabla `incidencias` en el esquema `registro_incidencias`
--- Crear secuencia por tabla (si no existe)
+CREATE SCHEMA IF NOT EXISTS registro_incidencias;
 
 
 CREATE TABLE IF NOT EXISTS registro_incidencias.incidencia_comentarios (
