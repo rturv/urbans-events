@@ -45,11 +45,37 @@ export class ChartTasasComponent implements OnChanges {
   @Input() data: MetricaAgregada[] | null = null;
 
   chartData: ChartData | null = null;
-  chartOptions: ChartConfiguration['options'] = getBarChartOptions(true);
+  chartOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        labels: {
+          color: '#0e6f3b',
+          font: { family: "'Source Sans 3', sans-serif", size: 12 },
+          padding: 15,
+          usePointStyle: true
+        }
+      }
+    },
+    scales: {
+      x: { grid: { display: false } },
+      y: {
+        beginAtZero: true,
+        ticks: { color: '#0e6f3b', font: { size: 11 } }
+      }
+    }
+  };
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
-      this.actualizarGrafica();
+      try {
+        this.actualizarGrafica();
+      } catch (error) {
+        console.error('Error en ChartTasasComponent:', error);
+        this.chartData = null;
+      }
     }
   }
 

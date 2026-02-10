@@ -2,7 +2,6 @@ import {
   Component,
   OnInit,
   OnDestroy,
-  ChangeDetectionStrategy,
   ChangeDetectorRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -13,25 +12,14 @@ import { MetricasService } from '../../services/metricas.service';
 import { ConfigService } from '../../services/config.service';
 import { ErrorBannerComponent } from '../error-banner/error-banner.component';
 import { HeaderComponent } from '../header/header.component';
-import {
-  KpiCardComponent,
-  ChartEstadosComponent,
-  ChartTiposComponent,
-  ChartTasasComponent,
-  ChartTiemposComponent,
-  ChartBubbleComponent,
-  ChartPercentilesComponent,
-  ChartPriorizacionComponent,
-  TablaPendientesComponent,
-  FiltrosComponent
-} from '../widgets';
+import { KpiCardComponent, TablaPendientesComponent } from '../widgets';
 import {
   ResumenMetricas,
   MetricaAgregada,
   EstadisticasTipo,
   IncidenciaPendiente
 } from '../../models';
-import { ErrorState, FilterState } from '../../types/metricas.types';
+import { ErrorState } from '../../types/metricas.types';
 
 /**
  * Componente contenedor principal del dashboard
@@ -46,15 +34,7 @@ import { ErrorState, FilterState } from '../../types/metricas.types';
     ErrorBannerComponent,
     HeaderComponent,
     KpiCardComponent,
-    ChartEstadosComponent,
-    ChartTiposComponent,
-    ChartTasasComponent,
-    ChartTiemposComponent,
-    ChartBubbleComponent,
-    ChartPercentilesComponent,
-    ChartPriorizacionComponent,
-    TablaPendientesComponent,
-    FiltrosComponent
+    TablaPendientesComponent
   ],
   template: `
     <div class="dashboard">
@@ -67,13 +47,6 @@ import { ErrorState, FilterState } from '../../types/metricas.types';
       ></app-header>
 
       <main class="dashboard__content">
-        <!-- Filtros -->
-        <div class="dashboard__filters">
-          <app-filtros
-            (filtrosChange)="onFiltrosChange($event)"
-          ></app-filtros>
-        </div>
-
         <!-- KPI Cards -->
         <div class="dashboard__kpi">
           <app-kpi-card [data]="resumen"></app-kpi-card>
@@ -81,13 +54,35 @@ import { ErrorState, FilterState } from '../../types/metricas.types';
 
         <!-- Gráficos principales -->
         <div class="dashboard__charts">
-          <app-chart-estados [data]="resumen"></app-chart-estados>
-          <app-chart-tipos [data]="estadisticasTipo"></app-chart-tipos>
-          <app-chart-tasas [data]="agregadas"></app-chart-tasas>
-          <app-chart-tiempos [data]="agregadas"></app-chart-tiempos>
-          <app-chart-bubble [data]="agregadas"></app-chart-bubble>
-          <app-chart-percentiles [data]="agregadas"></app-chart-percentiles>
-          <app-chart-priorizacion [data]="resumen"></app-chart-priorizacion>
+          <!-- Resumen de Estados -->
+          <div class="dashboard__summary-card">
+            <h3>Distribución por Estado</h3>
+            <div class="summary-stats">
+              <div class="stat">
+                <span class="stat-label">Resuelto:</span>
+                <span class="stat-value" style="color: #28a745">{{ resumen?.incidenciasResueltas ?? 0 }}</span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">Pendiente:</span>
+                <span class="stat-value" style="color: #ffc107">{{ resumen?.incidenciasPendientes ?? 0 }}</span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">Rechazado:</span>
+                <span class="stat-value" style="color: #dc3545">{{ resumen?.incidenciasRechazadas ?? 0 }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resumen por Tipo -->
+          <div class="dashboard__summary-card">
+            <h3>Incidencias por Tipo</h3>
+            <div class="summary-stats">
+              <div *ngFor="let estadistica of estadisticasTipo" class="stat">
+                <span class="stat-label">{{ estadistica.tipo }}:</span>
+                <span class="stat-value">{{ estadistica.cantidad }}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Tabla de pendientes -->
@@ -109,13 +104,6 @@ import { ErrorState, FilterState } from '../../types/metricas.types';
       padding: 2rem;
     }
 
-    .dashboard__filters {
-      margin-bottom: 2rem;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: var(--grid-gap);
-    }
-
     .dashboard__kpi {
       margin-bottom: 2rem;
       display: grid;
@@ -128,6 +116,48 @@ import { ErrorState, FilterState } from '../../types/metricas.types';
       grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
       gap: var(--grid-gap);
       margin-bottom: 2rem;
+    }
+
+    .dashboard__summary-card {
+      background: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .dashboard__summary-card h3 {
+      margin: 0 0 1rem 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--ink-500);
+    }
+
+    .summary-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .stat:last-child {
+      border-bottom: none;
+    }
+
+    .stat-label {
+      font-weight: 500;
+      color: var(--ink-500);
+    }
+
+    .stat-value {
+      font-weight: 600;
+      font-size: 1.1rem;
     }
 
     .dashboard__table {
@@ -172,8 +202,7 @@ import { ErrorState, FilterState } from '../../types/metricas.types';
         margin-bottom: 1rem;
       }
     }
-  `],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `]
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   status: 'loading' | 'ready' | 'error' = 'loading';
@@ -193,9 +222,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Control de refresh
   private destroy$ = new Subject<void>();
   private refreshInterval$!: Observable<number>;
-
-  // Filtros
-  currentFilter: FilterState = {};
 
   constructor(
     private metricas: MetricasService,
@@ -240,12 +266,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
          }
        });
 
-     // Cargar agregadas con filtros
+     // Cargar agregadas
      this.metricas
-       .obtenerAgregadas(
-         this.currentFilter.tipo,
-         this.currentFilter.prioridad
-       )
+       .obtenerAgregadas()
        .pipe(takeUntil(this.destroy$))
        .subscribe({
          next: (data) => {
@@ -335,17 +358,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
    */
   onRefresh(): void {
     this.metricas.clearCache();
-    this.cargarDatos();
-  }
-
-  /**
-   * Maneja cambios en los filtros
-   */
-  onFiltrosChange(filtros: FilterState): void {
-    this.currentFilter = filtros;
-    this.metricas.clearCacheKey(
-      `agregadas:${filtros.tipo || 'all'}:${filtros.prioridad || 'all'}`
-    );
     this.cargarDatos();
   }
 }

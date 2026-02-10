@@ -48,11 +48,43 @@ export class ChartTiemposComponent implements OnChanges {
   @Input() data: MetricaAgregada[] | null = null;
 
   chartData: ChartData | null = null;
-  chartOptions: ChartConfiguration['options'] = getBarChartOptions(true);
+  chartOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        labels: {
+          color: '#0e6f3b',
+          font: { family: "'Source Sans 3', sans-serif", size: 12 },
+          padding: 15,
+          usePointStyle: true
+        }
+      }
+    },
+    scales: {
+      x: { grid: { display: false } },
+      y: {
+        beginAtZero: true,
+        ticks: {
+          color: '#0e6f3b',
+          font: { size: 11 },
+          callback: (value) => {
+            return Math.round(value as number) + 's';
+          }
+        }
+      }
+    }
+  };
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
-      this.actualizarGrafica();
+      try {
+        this.actualizarGrafica();
+      } catch (error) {
+        console.error('Error en ChartTiemposComponent:', error);
+        this.chartData = null;
+      }
     }
   }
 
@@ -91,22 +123,6 @@ export class ChartTiemposComponent implements OnChanges {
           'rgba(214, 69, 61, 0.7)'
         )
       ]
-    };
-
-    // Configurar opciones con escala y legend
-    this.chartOptions = {
-      ...getBarChartOptions(true),
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            callback: (value) => {
-              const segundos = value as number;
-              return formatearTiempo(segundos);
-            }
-          }
-        }
-      }
     };
   }
 }

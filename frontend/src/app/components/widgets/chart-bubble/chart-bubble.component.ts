@@ -10,7 +10,7 @@ import { ChartConfiguration, ChartData } from 'chart.js';
 import { MetricaAgregada } from '../../../models';
 import { CardComponent } from '../shared/card.component';
 import { ChartWrapperComponent } from '../chart-wrapper/chart-wrapper.component';
-import { getScatterChartOptions, getChartColors } from '../../../utils/chart-config';
+import { getChartColors } from '../../../utils/chart-config';
 import { obtenerLabelTipo } from '../../../utils/format.utils';
 
 /**
@@ -44,11 +44,61 @@ export class ChartBubbleComponent implements OnChanges {
   @Input() data: MetricaAgregada[] | null = null;
 
   chartData: ChartData | null = null;
-  chartOptions: ChartConfiguration['options'] = getScatterChartOptions();
+  chartOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'bottom',
+        labels: {
+          color: '#0e6f3b',
+          font: { family: "'Source Sans 3', sans-serif", size: 12 },
+          padding: 15,
+          usePointStyle: true
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context: any) {
+            const dataPoint = context.raw;
+            return `Cantidad: ${dataPoint.x}, Tiempo: ${dataPoint.y}s`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        type: 'linear',
+        position: 'bottom',
+        title: {
+          display: true,
+          text: 'Cantidad Total de Incidencias'
+        },
+        ticks: {
+          color: '#0e6f3b'
+        }
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'Tiempo Promedio de Resolución (segundos)'
+        },
+        ticks: {
+          color: '#0e6f3b'
+        }
+      }
+    }
+  };
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
-      this.actualizarGrafica();
+      try {
+        this.actualizarGrafica();
+      } catch (error) {
+        console.error('Error en ChartBubbleComponent:', error);
+        this.chartData = null;
+      }
     }
   }
 
@@ -75,7 +125,7 @@ export class ChartBubbleComponent implements OnChanges {
             r: normalizedSize
           }
         ],
-        backgroundColor: colors[index] + '80', // Con transparencia
+        backgroundColor: colors[index] + '80',
         borderColor: colors[index],
         borderWidth: 2
       };
@@ -83,47 +133,6 @@ export class ChartBubbleComponent implements OnChanges {
 
     this.chartData = {
       datasets
-    };
-
-    // Configurar opciones con labels significativos
-    this.chartOptions = {
-      ...getScatterChartOptions(),
-      plugins: {
-        legend: {
-          display: true,
-          position: 'bottom'
-        },
-        tooltip: {
-          callbacks: {
-            label: function(context: any) {
-              const dataPoint = context.raw;
-              return `Cantidad: ${dataPoint.x}, Tiempo: ${dataPoint.y}s`;
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          type: 'linear',
-          position: 'bottom',
-          title: {
-            display: true,
-            text: 'Cantidad Total de Incidencias'
-          },
-          ticks: {
-            color: '#0d1f14'
-          }
-        },
-        y: {
-          title: {
-            display: true,
-            text: 'Tiempo Promedio de Resolución (segundos)'
-          },
-          ticks: {
-            color: '#0d1f14'
-          }
-        }
-      }
     };
   }
 }

@@ -1,7 +1,6 @@
 import {
   Component,
   Input,
-  ChangeDetectionStrategy,
   OnChanges,
   SimpleChanges
 } from '@angular/core';
@@ -33,18 +32,43 @@ import { obtenerLabelTipo } from '../../../utils/format.utils';
         [chartOptions]="chartOptions"
       ></app-chart-wrapper>
     </app-card>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class ChartTiposComponent implements OnChanges {
   @Input() data: EstadisticasTipo[] | null = null;
 
   chartData: ChartData | null = null;
-  chartOptions: ChartConfiguration['options'] = getBarChartOptions();
+  chartOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    indexAxis: 'y',
+    plugins: {
+      legend: {
+        display: true,
+        labels: {
+          color: '#0e6f3b',
+          font: { family: "'Source Sans 3', sans-serif", size: 12 },
+          padding: 15,
+          usePointStyle: true
+        }
+      }
+    },
+    scales: {
+      x: {
+        beginAtZero: true,
+        ticks: { color: '#0e6f3b' }
+      }
+    }
+  };
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
-      this.actualizarGrafica();
+      try {
+        this.actualizarGrafica();
+      } catch (error) {
+        console.error('Error en ChartTiposComponent:', error);
+        this.chartData = null;
+      }
     }
   }
 
@@ -70,20 +94,6 @@ export class ChartTiposComponent implements OnChanges {
           borderRadius: 4
         }
       ]
-    };
-
-    // Opciones para bar horizontal
-    this.chartOptions = {
-      ...getBarChartOptions(),
-      indexAxis: 'y',
-      scales: {
-        x: {
-          beginAtZero: true,
-          ticks: {
-            color: '#0d1f14'
-          }
-        }
-      }
     };
   }
 }

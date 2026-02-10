@@ -37,8 +37,7 @@ import { CHART_COLORS } from '../../../types/chart.types';
         [chartOptions]="chartOptions"
       ></app-chart-wrapper>
     </app-card>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class ChartEstadosComponent implements OnChanges {
   @Input() data: ResumenMetricas | null = null;
@@ -48,7 +47,12 @@ export class ChartEstadosComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
-      this.actualizarGrafica();
+      try {
+        this.actualizarGrafica();
+      } catch (error) {
+        console.error('Error en ChartEstadosComponent:', error);
+        this.chartData = null;
+      }
     }
   }
 
